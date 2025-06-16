@@ -1,6 +1,6 @@
 # Uniquely Typed
 
-A tiny library to create opaque types with [unique symbols](https://www.typescriptlang.org/docs/handbook/symbols.html#unique-symbol).
+A library to create opaque types with [unique symbols](https://www.typescriptlang.org/docs/handbook/symbols.html#unique-symbol).
 
 ```ts
 import { typed, InferTyped } from 'uniquely-typed';
@@ -95,7 +95,6 @@ class DatabaseService {
 }
 
 // @file: main.ts
-
 import { DatabaseService } from './database-service';
 
 const databaseService = new DatabaseService(client);
@@ -110,7 +109,6 @@ This works well for one-off queries. However, when you need to reuse the same qu
 
 ```ts
 // @file: database-service.ts
-
 class DatabaseService {
   // ...
 
@@ -128,7 +126,6 @@ But what if you need a variation of this query, like adding an age field? You'd 
 
 ```ts
 // @file: database-service.ts
-
 class DatabaseService {
   // ...
 
@@ -198,7 +195,6 @@ Now you can use the queries with full type safety:
 
 ```ts
 // @file: main.ts
-
 import { getUserQuery, getUserWithAgeQuery, listUsersQuery } from './query-repository';
 import { DatabaseService } from './database-service';
 

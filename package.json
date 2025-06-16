@@ -1,7 +1,7 @@
 {
   "name": "uniquely-typed",
   "version": "0.0.0",
-  "description": "A library to create opaque types",
+  "description": "A library to create opaque types with unique symbols.",
   "packageManager": "pnpm@9.0.0",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
