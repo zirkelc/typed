@@ -1,9 +1,9 @@
-# Typed
+# Uniquely Typed
 
-Typed is a library to create opaque types.
+A tiny library to create opaque types with [unique symbols](https://www.typescriptlang.org/docs/handbook/symbols.html#unique-symbol).
 
 ```ts
-import { typed, InferTyped } from 'typed-ts';
+import { typed, InferTyped } from 'uniquely-typed';
 
 type User = {
   id: number;
@@ -34,7 +34,7 @@ The utility type `InferTyped<T, N>` can be used to infer the N-th generic type p
 ## Installation
 
 ```bash
-npm install typed-ts
+npm install uniquely-typed
 ```
 
 ## API
@@ -154,7 +154,7 @@ Notice how each method is essentially a typed query - it connects a query string
 
 ```ts
 // @file: query-repository.ts
-import { typed } from 'typed-ts';
+import { typed } from 'uniquely-typed';
 
 export const getUserQuery = typed<
   Pick<User, 'id'>,
@@ -179,7 +179,7 @@ Instead of creating new methods for each query, we can make the database service
 
 ```ts
 // @file: database-service.ts
-import { InferTyped } from 'typed-ts';
+import { InferTyped } from 'uniquely-typed';
 
 type InferQueryParams<TQuery extends string> = InferTyped<TQuery, 0>;
 type InferQueryReturn<TQuery extends string> = InferTyped<TQuery, 1>;

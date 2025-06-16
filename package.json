@@ -1,5 +1,5 @@
 {
-  "name": "typed-ts",
+  "name": "uniquely-typed",
   "version": "0.0.0",
   "description": "A library to create opaque types",
   "packageManager": "pnpm@9.0.0",
@@ -29,6 +29,8 @@
     "opaque-types",
     "branded",
     "branded-types",
+    "unique",
+    "unique-typed",
     "type",
     "typed",
     "types"
