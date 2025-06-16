@@ -1,128 +1,213 @@
-# TypeScript Single Package Project Template
+# Typed
 
-This template provides an opinionated setup for a single package TypeScript project.
+Typed is a library to create opaque types.
 
-## 🚀 Features
+```ts
+import { typed, InferTyped } from 'typed';
 
-- 📦 [PNPM](https://pnpm.io/) for efficient package management
-- 🧹 [Biome](https://biomejs.dev/) for linting and formatting
-- 🧪 [Vitest](https://vitest.dev/) for fast, modern testing
-- 🏗️ [unbuild](https://github.com/unjs/unbuild) for TypeScript building and bundling
-- 🏃‍♂️ [tsx](https://tsx.is/) for running TypeScript files
-- 🐶 [Husky](https://github.com/typicode/husky) for Git hooks
-- 🔄 [GitHub Actions](.github/workflows/ci.yml) for continuous integration
-- 🐞 [VSCode](.vscode/) debug configuration and editor settings
-- 🔧 [@total-typescript/tsconfig](https://github.com/total-typescript/tsconfig) for TypeScript configuration
-- 🎯 [Are The Types Wrong?](https://github.com/arethetypeswrong/arethetypeswrong.github.io) for type validation
+type User = {
+  id: number;
+  name: string;
+  email: string;
+};
 
-## 🚀 Getting Started
+const getUserQuery = typed<
+  Pick<User, 'id'>,             // Type of the query parameters
+  Pick<User, 'name' | 'email'>, // Type of the query result
+  string                        // Type of the query string
+>('SELECT name, email FROM users WHERE id = $1');
 
-### 1. Create a new repository
+type QueryParams = InferTyped<typeof getUserQuery, 0>;
+//      ^? { id: number }
+type QueryResult = InferTyped<typeof getUserQuery, 1>;
+//      ^? { name: string; email: string }
+type QueryString = typeof getUserQuery;
+//      ^? string
+``` 
 
-Create a new repository [using this template](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template)
+## How it works
 
-### 2. Replace placeholders
+The `typed(value: any): any` function takes a single argument of type `any` and returns it without any changes. The function itself is a no-op at runtime, but the generic types passed to `typed<T1, T2, ..., T9>` are embedded in the returned type as [unique symbols](https://www.typescriptlang.org/docs/handbook/symbols.html#unique-symbol). 
+Unique symbols only exist in TypeScript's type system and are removed during compilation. We can use them to temporarily store type information and infer the original types later on. 
+The utility type `InferTyped<T, N>` can be used to infer the N-th generic type passed to `typed<T0, T1, T2, ..., T9>`.
 
-Replace all occurences of the following placeholders with the correct values:
+## Installation
 
-| Placeholder | File | Description |
-| --- | --- | --- |
-| `<PACKAGE>` | `package.json` | Your package name |
-| `<DESCRIPTION>` | `package.json` | Your package description |
-| `<USERNAME>` | `package.json` | Your GitHub username |
-| `<REPO>` | `package.json` | Your repository name |
-| `<AUTHOR>` | `package.json` | Your name |
-| `<LICENSE>` | `package.json` | Your license |
-
-### 3. Apply ToDos
-
-Find all occurrences of `TODO` and apply them:
-
-| TODO | File | Description |
-| --- | --- | --- |
-| `TODO: PREVIEW` | `.github/workflows/ci.yml` | Create [preview releases](#preview-releases) |
-| `TODO: PUBLISH` | `.github/workflows/ci.yml` | [Publish to NPM](#publish-npm) |
-
-### 4. Install, Build, Test
-
-Verify your project is working by running `install`, `build`, and `test`:
-
-```sh
-pnpm install
-pnpm build
-pnpm test
+```bash
+npm install typed
 ```
 
-Happy coding! 🎉
+## API
 
-## 📋 Details
+### `typed<T0, T1, T2, ..., T9, TBase>(value: TBase): TBase`
 
-### Package
+Takes a single argument of type `TBase` and returns it without any changes.
+Embeds the generic types passed to the function in the returned type as [unique symbols](https://www.typescriptlang.org/docs/handbook/symbols.html#unique-symbol).
 
-The [`package.json`](package.json) is configured as ESM (`"type": "module"`), but supports dual publishing with both ESM and CJS module formats.
+```ts
+const plainString = 'hello world';
+const typedString = typed<{ a: string }, { b: number }, { c: boolean }, typeof plainString>(plainString);
 
-### Biome
+type TypedString = typeof typedString;
+//      ^? string & Typed<{ a: string }, 0> & Typed<{ b: number }, 1> & Typed<{ c: boolean }, 2>
+```
 
-[`biome.jsonc`](biome.jsonc) contains the default [Biome configuration](https://biomejs.dev/reference/configuration/) with minimal formatting adjustments. It uses the formatter settings from the [`.editorconfig`](.editorconfig) file.
+### `InferTyped<T, N>`
 
-### Vitest
+Infers the N-th generic type passed to `typed<T0, T1, T2, ..., T9>`.
 
-An empty Vitest config is provided in [`vitest.config.ts`](vitest.config.ts).
+```ts
+const plainString = 'hello world';
+const typedString = typed<{ a: string }, { b: number }, { c: boolean }, typeof plainString>(plainString);
 
-### Build and Run
+type TypedString = typeof typedString;
+//      ^? string & Typed<{ a: string }, 0> & Typed<{ b: number }, 1> & Typed<{ c: boolean }, 2>
 
-- `unbuild` builds `./src/index.ts`, outputting both ESM and CJS formats to the `dist` folder.
-- `tsx` compiles and runs TypeScript files on-the-fly.
+type T0 = InferTyped<TypedString, 0>;
+//   ^? { a: string }
 
-### Git Hooks
+type T1 = InferTyped<TypedString, 1>;
+//   ^? { b: number }
 
-[Husky](https://github.com/typicode/husky) runs the [.husky/pre-commit](.husky/pre-commit) hook to lint staged files.
+type T2 = InferTyped<TypedString, 2>;
+//   ^? { c: boolean }
+```
 
-### Continuous Integration
+## Example
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) defines a GitHub Actions workflow to run linting and tests on commits and pull requests.
+This library is meant to be used as a type-level utility to extend existing types.
+A common use case is to co-locate SQL queries with their parameter and result types.
+Let's see how this works with a database service:
 
-### VSCode Integration
+```ts
+// @file: database-service.ts
+class DatabaseService {
+  private readonly client: Client;
 
-#### Debugging
+  constructor(client: Client) {
+    this.client = client;
+  }
 
-[`.vscode/launch.json`](.vscode/launch.json) provides VSCode launch configurations:
-- `Debug (tsx)`: Run and debug TypeScript files
-- `Test (vitest)`: Debug tests
+  async query<TParams, TReturn>(query: string, params: TParams): Promise<TReturn> {
+    const result = await this.client.query(query, params);
+    return result as TReturn;
+  }
+}
 
-It uses the [JavaScript Debug Terminal](https://code.visualstudio.com/docs/nodejs/nodejs-debugging) to run and debug.
+// @file: main.ts
 
-#### Editor Settings
+import { DatabaseService } from './database-service';
 
-[`.vscode/settings.json`](.vscode/settings.json) configures Biome as the formatter and enables format-on-save.
+const databaseService = new DatabaseService(client);
 
-### EditorConfig
+const result = await databaseService.query<{ id: number }, { name: string; email: string }>(
+  'SELECT name, email FROM users WHERE id = $1',
+  { id: 1 },
+);
+```
 
-[`.editorconfig`](.editorconfig) ensures consistent coding styles across different editors and IDEs:
+This works well for one-off queries. However, when you need to reuse the same query in multiple places, you might add a dedicated method:
 
-- Uses spaces for indentation (2 spaces)
-- Sets UTF-8 charset
-- Ensures LF line endings
-- Trims trailing whitespace (except in Markdown files)
-- Inserts a final newline in files
+```ts
+// @file: database-service.ts
 
-This configuration complements Biome and helps maintain a consistent code style throughout the project.
+class DatabaseService {
+  // ...
 
-### Type Validation
+  async getUser(id: number): Promise<{ name: string; email: string }> {
+    const result = await this.query<{ id: number }, { name: string; email: string }>(
+      'SELECT name, email FROM users WHERE id = $1',
+      { id },
+    );
+    return result;
+  }
+}
+```
 
-The project includes the `@arethetypeswrong/cli` CLI tool to validate TypeScript types in your package. Run `pnpm typecheck` after building to ensure your package's types are correct and compatible with both ESM and CommonJS environments.
+But what if you need a variation of this query, like adding an age field? You'd need to create another method:
 
-## Optional
+```ts
+// @file: database-service.ts
 
-### <a name="publish-npm"></a> Publish to NPM
-[JS-DevTools/npm-publish](https://github.com/JS-DevTools/npm-publish) is a GitHub Action to publish packages to npm automatically by updating the version number.
+class DatabaseService {
+  // ...
 
-To enable this, apply the `TODO: PUBLISH`.
+  async getUser(id: number): Promise<{ name: string; email: string }> {
+    const result = await this.query<{ id: number }, { name: string; email: string }>(
+      'SELECT name, email FROM users WHERE id = $1',
+      { id },
+    );
+    return result;
+  }
 
-### <a name="preview-releases"></a> Preview Releases
+  async getUserWithAge(id: number): Promise<{ name: string; email: string; age: number }> {
+    const result = await this.query<{ id: number }, { name: string; email: string; age: number }>(
+      'SELECT name, email, age FROM users WHERE id = $1',
+      { id },
+    );
+    return result;
+  }
+}
+```
 
-[pkg.pr.new](https://github.com/stackblitz-labs/pkg.pr.new) will automatically generate preview releases for every push and pull request. This allows you to test changes before publishing to npm.
+Notice how each method is essentially a typed query - it connects a query string with its parameter and result types. We can make this relationship explicit using `typed`:
 
-Must install GitHub App: [pkg.pr.new](https://github.com/apps/pkg-pr-new)
+```ts
+// @file: query-repository.ts
 
-To enable this, apply the `TODO: PREVIEW`.
+export const getUserQuery = typed<
+  Pick<User, 'id'>,
+  Pick<User, 'name' | 'email'>,
+  string
+>('SELECT name, email FROM users WHERE id = $1');
+
+export const getUserWithAgeQuery = typed<
+  Pick<User, 'id'>,
+  Pick<User, 'name' | 'email' | 'age'>,
+  string
+>('SELECT name, email, age FROM users WHERE id = $1');
+
+export const listUsersQuery = typed<
+  undefined,
+  Array<Pick<User, 'id' | 'name' | 'email'>>,
+  string
+>('SELECT id, name, email FROM users');
+```
+
+Instead of creating new methods for each query, we can make the database service generic and pass typed queries directly:
+
+```ts
+// @file: database-service.ts
+
+type InferQueryParams<TQuery extends string> = InferTyped<TQuery, 0>;
+type InferQueryReturn<TQuery extends string> = InferTyped<TQuery, 1>;
+
+class DatabaseService {
+  // ...
+
+  async query<TQuery extends string>(query: TQuery, params: InferQueryParams<TQuery>): Promise<InferQueryReturn<TQuery>> {
+    const result = await this.client.query(query, params);
+    return result as InferQueryReturn<TQuery>;
+  }
+}
+```
+
+Now you can use the queries with full type safety:
+
+```ts
+// @file: main.ts
+
+import * as queries from './query-repository';
+import { DatabaseService } from './database-service';
+
+const databaseService = new DatabaseService(client);
+
+const user = await databaseService.query(queries.getUserQuery, { id: 1 });
+//      ^? { name: string; email: string }
+
+const userWithAge = await databaseService.query(queries.getUserWithAgeQuery, { id: 1 });
+//      ^? { name: string; email: string; age: number }
+
+const allUsers = await databaseService.query(queries.listUsersQuery);
+//      ^? Array<{ id: number; name: string; email: string }>
+```
