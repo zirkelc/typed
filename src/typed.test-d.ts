@@ -2,43 +2,43 @@ import { expectTypeOf, test } from 'vitest';
 import { type InferTyped, typed } from './typed.js';
 
 type T0 = {
-  value: string;
+  t0: string;
 };
 
 type T1 = {
-  value: string;
+  t1: string;
 };
 
 type T2 = {
-  value: string;
+  t2: string;
 };
 
 type T3 = {
-  value: string;
+  t3: string;
 };
 
 type T4 = {
-  value: string;
+  t4: string;
 };
 
 type T5 = {
-  value: string;
+  t5: string;
 };
 
 type T6 = {
-  value: string;
+  t6: string;
 };
 
 type T7 = {
-  value: string;
+  t7: string;
 };
 
 type T8 = {
-  value: string;
+  t8: string;
 };
 
 type T9 = {
-  value: string;
+  t9: string;
 };
 
 test('typed<T0>', () => {

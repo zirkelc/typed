@@ -197,17 +197,19 @@ Now you can use the queries with full type safety:
 ```ts
 // @file: main.ts
 
-import * as queries from './query-repository';
+import { getUserQuery, getUserWithAgeQuery, listUsersQuery } from './query-repository';
 import { DatabaseService } from './database-service';
 
 const databaseService = new DatabaseService(client);
 
-const user = await databaseService.query(queries.getUserQuery, { id: 1 });
+const user = await databaseService.query(getUserQuery, { id: 1 });
 //      ^? { name: string; email: string }
 
-const userWithAge = await databaseService.query(queries.getUserWithAgeQuery, { id: 1 });
+const userWithAge = await databaseService.query(getUserWithAgeQuery, { id: 1 });
 //      ^? { name: string; email: string; age: number }
 
-const allUsers = await databaseService.query(queries.listUsersQuery);
+const allUsers = await databaseService.query(listUsersQuery);
 //      ^? Array<{ id: number; name: string; email: string }>
 ```
+
+You can find the complete example in [example/query.ts](./example/query.ts).
