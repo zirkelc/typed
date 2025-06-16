@@ -3,7 +3,7 @@
 Typed is a library to create opaque types.
 
 ```ts
-import { typed, InferTyped } from 'typed';
+import { typed, InferTyped } from 'typed-ts';
 
 type User = {
   id: number;
@@ -34,7 +34,7 @@ The utility type `InferTyped<T, N>` can be used to infer the N-th generic type p
 ## Installation
 
 ```bash
-npm install typed
+npm install typed-ts
 ```
 
 ## API
@@ -154,6 +154,7 @@ Notice how each method is essentially a typed query - it connects a query string
 
 ```ts
 // @file: query-repository.ts
+import { typed } from 'typed-ts';
 
 export const getUserQuery = typed<
   Pick<User, 'id'>,
@@ -178,6 +179,7 @@ Instead of creating new methods for each query, we can make the database service
 
 ```ts
 // @file: database-service.ts
+import { InferTyped } from 'typed-ts';
 
 type InferQueryParams<TQuery extends string> = InferTyped<TQuery, 0>;
 type InferQueryReturn<TQuery extends string> = InferTyped<TQuery, 1>;

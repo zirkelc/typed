@@ -1,5 +1,5 @@
 {
-  "name": "typed",
+  "name": "typed-ts",
   "version": "0.0.0",
   "description": "A library to create opaque types",
   "packageManager": "pnpm@9.0.0",
@@ -22,7 +22,17 @@
     "prepare": "husky",
     "typecheck": "attw --pack ."
   },
-  "keywords": [],
+  "keywords": [
+    "ts",
+    "typescript",
+    "opaque",
+    "opaque-types",
+    "branded",
+    "branded-types",
+    "type",
+    "typed",
+    "types"
+  ],
   "author": "Chris Cook",
   "license": "MIT",
   "repository": {
